@@ -1,26 +1,20 @@
 {
   "name": "homefinder",
   "version": "1.0.0",
-  "description": "Mini Property Marketplace - College Skill Lab Project",
+  "private": true,
+  "description": "HomeFinder skill lab Express REST API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "seed": "node seed.js"
+    "dev": "nodemon server.js"
   },
-  "keywords": [
-    "property-marketplace",
-    "leaflet",
-    "express",
-    "mongodb",
-    "vanilla-js"
-  ],
-  "author": "HomeFinder Team",
-  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "mongoose": "^8.9.2"
+    "mongoose": "^8.12.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }
