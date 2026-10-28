@@ -9,7 +9,7 @@
 // Set USE_MOCK to true to test the frontend before the backend (Person 2) is ready.
 // Set USE_MOCK to false to fetch from the real Express REST API at /api/properties.
 // ============================================================================
-const USE_MOCK = false;
+const USE_MOCK = true;
 
 // Day 2: Sample Bengaluru properties for offline testing and lab demonstration
 const INITIAL_MOCK_PROPERTIES = [
