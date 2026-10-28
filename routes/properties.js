@@ -1,26 +1,12 @@
-/**
- * HomeFinder - Properties Router
- * Day 3 Topic: Express Router & REST API Endpoints
- * Author: Person 2 (Backend Developer)
- */
-const express = require("express");
+// Day 3: Express REST routes. Controllers contain the logic.
+const express = require('express');
+const controller = require('../controllers/propertyController');
 const router = express.Router();
-const {
-  getProperties,
-  getPropertyById,
-  createProperty,
-  updateProperty,
-  deleteProperty
-} = require("../controllers/propertyController");
 
-// REST Endpoints: /api/properties
-router.route("/")
-  .get(getProperties)
-  .post(createProperty);
-
-router.route("/:id")
-  .get(getPropertyById)
-  .put(updateProperty)
-  .delete(deleteProperty);
+router.get('/', controller.getProperties);
+router.get('/:id', controller.getPropertyById);
+router.post('/', controller.createProperty);
+router.put('/:id', controller.updateProperty);
+router.delete('/:id', controller.deleteProperty);
 
 module.exports = router;

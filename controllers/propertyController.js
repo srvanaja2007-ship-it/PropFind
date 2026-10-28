@@ -1,286 +1,170 @@
-/**
- * HomeFinder - Property Controller
- * Day 3 Topic: Node.js, Express & REST API Business Logic
- * Author: Person 2 (Backend Developer)
- */
-const mongoose = require("mongoose");
-const Property = require("../models/Property");
+// Day 3: Property REST API controllers, validation and query filtering.
+const mongoose = require('mongoose');
+const Property = require('../models/Property');
 
-// Built-in in-memory fallback dataset (Active when local MongoDB is offline)
-let memoryProperties = [
-  {
-    _id: "671fb100e4b01a2b3c4d5e01",
-    title: "Sunny 2 BHK with Balcony in Koramangala",
-    price: 32000,
-    bhk: 2,
-    location: "Koramangala 4th Block, Bengaluru",
-    lat: 12.9352,
-    lng: 77.6245,
-    imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80",
-    amenities: ["Parking", "Lift", "Security", "Power Backup"],
-    ownerName: "Rajesh Sharma",
-    ownerPhone: "+91 98765 43210",
-    createdAt: new Date("2026-10-15").toISOString()
-  },
-  {
-    _id: "671fb100e4b01a2b3c4d5e02",
-    title: "Luxury 3 BHK Penthouse in Indiranagar",
-    price: 65000,
-    bhk: 3,
-    location: "100ft Road, Indiranagar, Bengaluru",
-    lat: 12.9784,
-    lng: 77.6408,
-    imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80",
-    amenities: ["Parking", "Gym", "Swimming Pool", "Lift", "Security", "Power Backup", "Garden"],
-    ownerName: "Priya Nair",
-    ownerPhone: "+91 98450 12345",
-    createdAt: new Date("2026-10-18").toISOString()
-  },
-  {
-    _id: "671fb100e4b01a2b3c4d5e03",
-    title: "Cozy 1 BHK Studio for Tech Professionals",
-    price: 18000,
-    bhk: 1,
-    location: "HSR Layout Sector 2, Bengaluru",
-    lat: 12.9121,
-    lng: 77.6446,
-    imageUrl: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80",
-    amenities: ["Parking", "Security", "Power Backup"],
-    ownerName: "Arun Kumar",
-    ownerPhone: "+91 97312 98765",
-    createdAt: new Date("2026-10-20").toISOString()
-  },
-  {
-    _id: "671fb100e4b01a2b3c4d5e04",
-    title: "Spacious 4 BHK Gated Villa with Private Lawn",
-    price: 85000,
-    bhk: 4,
-    location: "ITPL Main Road, Whitefield, Bengaluru",
-    lat: 12.9698,
-    lng: 77.7500,
-    imageUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-    amenities: ["Parking", "Gym", "Swimming Pool", "Security", "Power Backup", "Garden"],
-    ownerName: "Sneha Reddy",
-    ownerPhone: "+91 99001 54321",
-    createdAt: new Date("2026-10-22").toISOString()
-  },
-  {
-    _id: "671fb100e4b01a2b3c4d5e05",
-    title: "Charming 2 BHK Flat near Metro Station",
-    price: 26000,
-    bhk: 2,
-    location: "JP Nagar 5th Phase, Bengaluru",
-    lat: 12.9063,
-    lng: 77.5857,
-    imageUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=800&q=80",
-    amenities: ["Parking", "Lift", "Security", "Garden"],
-    ownerName: "Vikram Malhotra",
-    ownerPhone: "+91 98860 67890",
-    createdAt: new Date("2026-10-25").toISOString()
-  }
+const ALLOWED_AMENITIES = [
+  'Parking', 'Gym', 'Swimming Pool', 'Lift',
+  'Security', 'Power Backup', 'Garden'
+];
+const REQUIRED_FIELDS = [
+  'title', 'price', 'bhk', 'location', 'lat', 'lng',
+  'imageUrl', 'amenities', 'ownerName', 'ownerPhone'
 ];
 
-const isDbConnected = () => mongoose.connection.readyState === 1;
+function errorResponse(res, err) {
+  if (err.name === 'ValidationError' || err.name === 'CastError') {
+    return res.status(400).json({ error: err.message });
+  }
+  console.error('Property API error:', err);
+  return res.status(500).json({ error: 'Internal server error' });
+}
 
-// GET /api/properties
-// Optional query params: minPrice, maxPrice, bhk, amenities, location
+// Day 3: validate the shared Property JSON contract for POST and PUT.
+function validateProperty(body) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return 'Request body must be a JSON object';
+  }
+  for (const field of REQUIRED_FIELDS) {
+    if (!Object.prototype.hasOwnProperty.call(body, field)) {
+      return `${field} is required`;
+    }
+  }
+  for (const field of ['title', 'location', 'imageUrl', 'ownerName', 'ownerPhone']) {
+    if (typeof body[field] !== 'string' || !body[field].trim()) {
+      return `${field} must be a non-empty string`;
+    }
+  }
+  if (typeof body.price !== 'number' || !Number.isFinite(body.price) || body.price < 0) {
+    return 'price must be a non-negative number';
+  }
+  if (!Number.isInteger(body.bhk) || body.bhk < 1 || body.bhk > 4) {
+    return 'bhk must be an integer from 1 to 4';
+  }
+  if (typeof body.lat !== 'number' || !Number.isFinite(body.lat) || body.lat < -90 || body.lat > 90) {
+    return 'lat must be a number between -90 and 90';
+  }
+  if (typeof body.lng !== 'number' || !Number.isFinite(body.lng) || body.lng < -180 || body.lng > 180) {
+    return 'lng must be a number between -180 and 180';
+  }
+  if (!Array.isArray(body.amenities) || body.amenities.some(a => !ALLOWED_AMENITIES.includes(a))) {
+    return `amenities must be an array containing only: ${ALLOWED_AMENITIES.join(', ')}`;
+  }
+  return null;
+}
+
+function propertyData(body) {
+  return Object.fromEntries(REQUIRED_FIELDS.map(field => [field, body[field]]));
+}
+
+// Day 3: GET /api/properties with Mongoose query param filtering.
 exports.getProperties = async (req, res) => {
   try {
     const { minPrice, maxPrice, bhk, amenities, location } = req.query;
-
-    if (isDbConnected()) {
-      const query = {};
-
-      if (minPrice || maxPrice) {
-        query.price = {};
-        if (minPrice) query.price.$gte = Number(minPrice);
-        if (maxPrice) query.price.$lte = Number(maxPrice);
+    const filter = {};
+    if (minPrice !== undefined || maxPrice !== undefined) {
+      filter.price = {};
+      for (const [key, operator] of [['minPrice', '$gte'], ['maxPrice', '$lte']]) {
+        if (req.query[key] !== undefined) {
+          const raw = req.query[key];
+          const n = Number(raw);
+          if (typeof raw !== 'string' || !raw.trim() || !Number.isFinite(n) || n < 0) {
+            return res.status(400).json({ error: `${key} must be a non-negative number` });
+          }
+          filter.price[operator] = n;
+        }
       }
-
-      if (bhk) {
-        query.bhk = Number(bhk);
+      if (filter.price.$gte !== undefined && filter.price.$lte !== undefined && filter.price.$gte > filter.price.$lte) {
+        return res.status(400).json({ error: 'minPrice cannot exceed maxPrice' });
       }
-
-      if (location) {
-        query.location = { $regex: location, $options: "i" };
+    }
+    if (bhk !== undefined) {
+      const n = Number(bhk);
+      if (typeof bhk !== 'string' || !bhk.trim() || !Number.isInteger(n) || n < 1 || n > 4) {
+        return res.status(400).json({ error: 'bhk must be an integer from 1 to 4' });
       }
-
-      if (amenities) {
-        const amenitiesList = amenities.split(",").map((a) => a.trim());
-        query.amenities = { $all: amenitiesList };
+      filter.bhk = n;
+    }
+    if (amenities !== undefined) {
+      if (typeof amenities !== 'string' || !amenities.trim()) {
+        return res.status(400).json({ error: 'amenities must be a comma-separated list' });
       }
-
-      const properties = await Property.find(query).sort({ createdAt: -1 });
-      return res.status(200).json(properties);
+      const values = amenities.split(',').map(a => a.trim());
+      if (values.some(a => !ALLOWED_AMENITIES.includes(a))) {
+        return res.status(400).json({ error: 'Invalid amenity in query' });
+      }
+      filter.amenities = { $all: values };
     }
-
-    // Fallback in-memory filter
-    let results = [...memoryProperties];
-
-    if (location) {
-      const loc = location.toLowerCase();
-      results = results.filter(
-        (p) =>
-          (p.location && p.location.toLowerCase().includes(loc)) ||
-          (p.title && p.title.toLowerCase().includes(loc))
-      );
+    if (location !== undefined) {
+      if (typeof location !== 'string') {
+        return res.status(400).json({ error: 'location must be text' });
+      }
+      // Escape regex metacharacters: location is a literal partial-text match.
+      const escaped = location.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      filter.location = { $regex: escaped, $options: 'i' };
     }
-
-    if (bhk) {
-      results = results.filter((p) => Number(p.bhk) === Number(bhk));
-    }
-
-    if (minPrice) {
-      results = results.filter((p) => p.price >= Number(minPrice));
-    }
-
-    if (maxPrice) {
-      results = results.filter((p) => p.price <= Number(maxPrice));
-    }
-
-    if (amenities) {
-      const required = amenities.split(",").map((a) => a.trim());
-      results = results.filter(
-        (p) => Array.isArray(p.amenities) && required.every((a) => p.amenities.includes(a))
-      );
-    }
-
-    return res.status(200).json(results);
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
+    const properties = await Property.find(filter).sort({ createdAt: -1 });
+    return res.status(200).json(properties);
+  } catch (err) {
+    return errorResponse(res, err);
   }
 };
 
-// GET /api/properties/:id
+// Day 3: GET one property by MongoDB ObjectId.
 exports.getPropertyById = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    if (isDbConnected()) {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({ error: "Property not found" });
-      }
-      const property = await Property.findById(id);
-      if (!property) {
-        return res.status(404).json({ error: "Property not found" });
-      }
-      return res.status(200).json(property);
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid property ID' });
     }
-
-    const found = memoryProperties.find((p) => String(p._id) === String(id));
-    if (!found) {
-      return res.status(404).json({ error: "Property not found" });
-    }
-    return res.status(200).json(found);
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
+    const property = await Property.findById(req.params.id);
+    if (!property) return res.status(404).json({ error: 'Property not found' });
+    return res.status(200).json(property);
+  } catch (err) {
+    return errorResponse(res, err);
   }
 };
 
-// POST /api/properties
+// Day 3: POST a new property.
 exports.createProperty = async (req, res) => {
   try {
-    const { title, price, bhk, location, lat, lng, imageUrl, amenities, ownerName, ownerPhone } = req.body;
-
-    if (!title || !price || !bhk || !location || lat === undefined || lng === undefined || !imageUrl || !ownerName || !ownerPhone) {
-      return res.status(400).json({ error: "All required fields must be provided" });
-    }
-
-    if (isDbConnected()) {
-      const newProperty = await Property.create({
-        title,
-        price,
-        bhk,
-        location,
-        lat,
-        lng,
-        imageUrl,
-        amenities: amenities || [],
-        ownerName,
-        ownerPhone
-      });
-      return res.status(201).json(newProperty);
-    }
-
-    const newProperty = {
-      _id: "mem-" + Date.now(),
-      title,
-      price: Number(price),
-      bhk: Number(bhk),
-      location,
-      lat: Number(lat),
-      lng: Number(lng),
-      imageUrl,
-      amenities: amenities || [],
-      ownerName,
-      ownerPhone,
-      createdAt: new Date().toISOString()
-    };
-    memoryProperties.unshift(newProperty);
-    return res.status(201).json(newProperty);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
+    const error = validateProperty(req.body);
+    if (error) return res.status(400).json({ error });
+    const property = await Property.create(propertyData(req.body));
+    return res.status(201).json(property);
+  } catch (err) {
+    return errorResponse(res, err);
   }
 };
 
-// PUT /api/properties/:id
+// Day 3: PUT replaces the editable fields of a property.
 exports.updateProperty = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    if (isDbConnected()) {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({ error: "Property not found" });
-      }
-      const updated = await Property.findByIdAndUpdate(id, req.body, {
-        new: true,
-        runValidators: true
-      });
-      if (!updated) {
-        return res.status(404).json({ error: "Property not found" });
-      }
-      return res.status(200).json(updated);
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid property ID' });
     }
-
-    const index = memoryProperties.findIndex((p) => String(p._id) === String(id));
-    if (index === -1) {
-      return res.status(404).json({ error: "Property not found" });
-    }
-
-    memoryProperties[index] = {
-      ...memoryProperties[index],
-      ...req.body
-    };
-
-    return res.status(200).json(memoryProperties[index]);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
+    const error = validateProperty(req.body);
+    if (error) return res.status(400).json({ error });
+    const property = await Property.findByIdAndUpdate(
+      req.params.id,
+      propertyData(req.body),
+      { new: true, runValidators: true }
+    );
+    if (!property) return res.status(404).json({ error: 'Property not found' });
+    return res.status(200).json(property);
+  } catch (err) {
+    return errorResponse(res, err);
   }
 };
 
-// DELETE /api/properties/:id
+// Day 3: DELETE a property.
 exports.deleteProperty = async (req, res) => {
   try {
-    const { id } = req.params;
-
-    if (isDbConnected()) {
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({ error: "Property not found" });
-      }
-      const deleted = await Property.findByIdAndDelete(id);
-      if (!deleted) {
-        return res.status(404).json({ error: "Property not found" });
-      }
-      return res.status(200).json({ message: "Deleted" });
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid property ID' });
     }
-
-    const index = memoryProperties.findIndex((p) => String(p._id) === String(id));
-    if (index === -1) {
-      return res.status(404).json({ error: "Property not found" });
-    }
-    memoryProperties.splice(index, 1);
-    return res.status(200).json({ message: "Deleted" });
-  } catch (error) {
-    return res.status(500).json({ error: error.message });
+    const property = await Property.findByIdAndDelete(req.params.id);
+    if (!property) return res.status(404).json({ error: 'Property not found' });
+    return res.status(200).json({ message: 'Deleted' });
+  } catch (err) {
+    return errorResponse(res, err);
   }
 };

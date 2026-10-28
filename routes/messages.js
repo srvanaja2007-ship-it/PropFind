@@ -1,13 +1,8 @@
-/**
- * HomeFinder - Messages Router
- * Day 3 Topic: Express Router & REST API Endpoints
- * Author: Person 2 (Backend Developer)
- */
-const express = require("express");
+// Day 3: Express REST route for contacting a property's owner.
+const express = require('express');
+const { createMessage } = require('../controllers/messageController');
 const router = express.Router();
-const { createMessage } = require("../controllers/messageController");
 
-// REST Endpoint: POST /api/messages
-router.post("/", createMessage);
+router.post('/', createMessage);
 
 module.exports = router;

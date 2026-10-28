@@ -1,60 +1,50 @@
-/**
- * HomeFinder - Express Server Entry Point
- * Day 3 Topic: Node.js, Express, REST API & Static Hosting
- * Author: Person 2 (Backend Developer)
- */
-require("dotenv").config();
-const path = require("path");
-const express = require("express");
-const cors = require("cors");
-const connectDB = require("./config/db");
+// Day 3: Express REST API server for HomeFinder.
+require('dotenv').config();
 
-// Initialize Database connection
-connectDB();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const connectDB = require('./config/db');
+const propertyRoutes = require('./routes/properties');
+const messageRoutes = require('./routes/messages');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
+// Day 3: middleware runs before routes.
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Serve static frontend assets from /public folder
-app.use(express.static(path.join(__dirname, "public")));
+// Day 3: mount REST API routes.
+app.use('/api/properties', propertyRoutes);
+app.use('/api/messages', messageRoutes);
 
-// REST API Routes
-app.use("/api/properties", require("./routes/properties"));
-app.use("/api/messages", require("./routes/messages"));
-
-// Health check endpoint
-app.get("/api/health", (req, res) => {
-  res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
+// Day 3: unknown API route returns JSON 404.
+app.use('/api', (req, res) => {
+  res.status(404).json({ error: 'API route not found' });
 });
 
-// Fallback for root path to ensure index.html is served
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-
-// Global 404 handler for API routes
-app.use("/api/*", (req, res) => {
-  res.status(404).json({ error: "API endpoint not found" });
-});
-
-// Global Error Handler
+// Day 3: global Express error handling (including invalid JSON bodies).
 app.use((err, req, res, next) => {
-  console.error("Server Error:", err.stack);
-  res.status(500).json({ error: err.message || "Internal Server Error" });
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Invalid JSON request body' });
+  }
+  console.error('Server error:', err);
+  return res.status(500).json({ error: 'Internal server error' });
 });
 
-// Start Server
-app.listen(PORT, () => {
-  console.log(`=======================================================`);
-  console.log(`🚀 HomeFinder Server running at: http://localhost:${PORT}`);
-  console.log(`🏠 Open in your browser: http://localhost:${PORT}`);
-  console.log(`📡 REST API active at: http://localhost:${PORT}/api/properties`);
-  console.log(`=======================================================`);
-});
+// Day 3 + Day 4: do not accept requests until MongoDB is connected.
+async function startServer() {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`HomeFinder running at http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('Could not connect to MongoDB:', err.message);
+    process.exit(1);
+  }
+}
 
-module.exports = app;
+startServer();
