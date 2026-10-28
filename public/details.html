@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Day 1: HTML5 Document Structure for Property Details Page -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View comprehensive property details, amenities, location map, and contact the owner on HomeFinder.">
+  <title>Property Details | HomeFinder</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Day 1 & 2: Leaflet CSS via CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+  <!-- Day 1: External CSS Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Day 1: Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand" id="brand-logo">
+        <span class="logo-icon">🏠</span>
+        <span>HomeFinder</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html">&larr; Back to Browse</a></li>
+          <li><a href="add.html" class="btn btn-primary btn-sm">+ List Property</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Day 1: Main Content Container -->
+  <main class="main-container">
+
+    <!-- Loading State -->
+    <div id="loading-state" class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading property details...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="error-state" class="empty-state" style="display: none;">
+      <div class="empty-state-icon">⚠️</div>
+      <h3 id="error-title">Property Not Found</h3>
+      <p id="error-desc">We couldn't locate the property you requested.</p>
+      <a href="index.html" class="btn btn-primary">Return to Browse</a>
+    </div>
+
+    <!-- Day 1: Responsive Details Layout (Desktop 2-column, Mobile 1-column) -->
+    <div id="details-container" class="details-layout" style="display: none;">
+
+      <!-- Left / Main Column: Property Specs, Image, Map -->
+      <section class="details-main">
+        <img id="detail-image" src="" alt="Property Hero Image" class="details-hero-image">
+
+        <div class="details-content">
+          <div class="details-header">
+            <div>
+              <h1 id="detail-title" style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.35rem;"></h1>
+              <p id="detail-location" style="color: var(--text-muted); font-size: 1rem;"></p>
+            </div>
+            <div class="details-price-badge" id="detail-price"></div>
+          </div>
+
+          <!-- Quick Stats Grid -->
+          <div class="details-meta-grid">
+            <div class="meta-item">
+              <span class="meta-label">Configuration</span>
+              <span class="meta-value" id="detail-bhk"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Monthly Rent</span>
+              <span class="meta-value" id="detail-price-meta"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Listed On</span>
+              <span class="meta-value" id="detail-date"></span>
+            </div>
+          </div>
+
+          <!-- Amenities Section -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">Amenities Included</h3>
+            <div id="detail-amenities" class="amenity-tags" style="gap: 0.5rem;"></div>
+          </div>
+
+          <!-- Leaflet Location Map Section -->
+          <div style="margin-bottom: 2rem;">
+            <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.75rem;">Location &amp; Neighborhood</h3>
+            <div id="details-map" role="region" aria-label="Property Location Map"></div>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.4rem;">
+              Latitude: <span id="detail-lat"></span> &bull; Longitude: <span id="detail-lng"></span>
+            </p>
+          </div>
+
+          <!-- Management Actions (Edit & Delete) -->
+          <div class="action-buttons-group">
+            <a href="#" id="btn-edit-property" class="btn btn-secondary">
+              ✏️ Edit Listing
+            </a>
+            <button type="button" id="btn-delete-property" class="btn btn-danger">
+              🗑️ Delete Listing
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column / Sidebar: Contact Owner Form -->
+      <aside class="details-sidebar">
+        <!-- Owner Info Card -->
+        <div class="sidebar-card">
+          <h3>Owner Information</h3>
+          <p style="margin-bottom: 0.4rem; font-size: 0.95rem;">
+            <strong>Name:</strong> <span id="detail-owner-name"></span>
+          </p>
+          <p style="margin-bottom: 1.25rem; font-size: 0.95rem;">
+            <strong>Phone:</strong> <a href="#" id="detail-owner-phone" style="font-weight: 600;"></a>
+          </p>
+
+          <hr style="border: none; border-top: 1px solid var(--border); margin: 1.25rem 0;">
+
+          <!-- Contact Form (POST /api/messages) -->
+          <h3>Contact Owner</h3>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Send an inquiry directly to the owner regarding this rental property.
+          </p>
+
+          <div id="message-alert" class="alert" style="display: none;" role="alert"></div>
+
+          <form id="contact-form">
+            <div class="form-group" style="margin-bottom: 1rem;">
+              <label for="sender-name">Your Full Name *</label>
+              <input type="text" id="sender-name" class="form-control" placeholder="e.g. Aditi Rao" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+              <label for="sender-message">Message *</label>
+              <textarea
+                id="sender-message"
+                class="form-control"
+                rows="4"
+                placeholder="I am interested in this apartment. When can I schedule a visit?"
+                required
+              ></textarea>
+            </div>
+
+            <button type="submit" id="btn-send-message" class="btn btn-primary" style="width: 100%;">
+              Send Inquiry
+            </button>
+          </form>
+        </div>
+      </aside>
+
+    </div>
+  </main>
+
+  <!-- Day 1: Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p><strong>HomeFinder</strong> &mdash; Mini Property Marketplace &bull; College Skill Lab Project</p>
+    </div>
+  </footer>
+
+  <!-- Day 2: Leaflet JS via CDN -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Day 2: Details Script -->
+  <script src="js/details.js"></script>
+</body>
+</html>

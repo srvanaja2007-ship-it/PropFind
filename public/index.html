@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Day 1: HTML5 Document Structure & Metadata -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="HomeFinder - Browse, filter, and discover rental apartments and homes in Bengaluru with real-time map integration.">
+  <title>HomeFinder | Mini Property Marketplace</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Day 1 & 2: Leaflet CSS via CDN (OpenStreetMap) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+  <!-- Day 1: External Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Day 1: Semantic Navigation Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand" id="brand-logo">
+        <span class="logo-icon">🏠</span>
+        <span>HomeFinder</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="active" id="nav-browse">Browse</a></li>
+          <li><a href="add.html" class="btn btn-primary btn-sm" id="nav-add-property">+ List Property</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Day 1: Main Content Section -->
+  <main class="main-container">
+
+    <!-- Hero Banner -->
+    <section class="hero-banner">
+      <h1>Find Your Ideal Rental in Bengaluru</h1>
+      <p>Discover verified 1-4 BHK apartments, flats, and villas with upfront pricing and amenities.</p>
+    </section>
+
+    <!-- Day 1 & 2: Filter Bar Component -->
+    <section class="filter-card" aria-label="Search and filter properties">
+      <div class="filter-header">
+        <h2>🔍 Search &amp; Filter Properties</h2>
+        <span id="mock-badge" style="font-size: 0.8rem; padding: 0.25rem 0.6rem; border-radius: 9999px; background: #e0f2fe; color: #0284c7; font-weight: 600;"></span>
+      </div>
+
+      <form id="filter-form">
+        <div class="filter-grid">
+          <!-- Location Search -->
+          <div class="form-group">
+            <label for="filter-location">Location / Area</label>
+            <input type="text" id="filter-location" class="form-control" placeholder="e.g. Koramangala, Indiranagar">
+          </div>
+
+          <!-- BHK Filter -->
+          <div class="form-group">
+            <label for="filter-bhk">BHK</label>
+            <select id="filter-bhk" class="form-control">
+              <option value="">All BHKs</option>
+              <option value="1">1 BHK</option>
+              <option value="2">2 BHK</option>
+              <option value="3">3 BHK</option>
+              <option value="4">4 BHK</option>
+            </select>
+          </div>
+
+          <!-- Min Price -->
+          <div class="form-group">
+            <label for="filter-min-price">Min Price (₹)</label>
+            <input type="number" id="filter-min-price" class="form-control" placeholder="e.g. 15000" min="0" step="1000">
+          </div>
+
+          <!-- Max Price -->
+          <div class="form-group">
+            <label for="filter-max-price">Max Price (₹)</label>
+            <input type="number" id="filter-max-price" class="form-control" placeholder="e.g. 60000" min="0" step="1000">
+          </div>
+        </div>
+
+        <!-- Amenities Checkboxes -->
+        <div class="amenities-group">
+          <label>Amenities</label>
+          <div class="checkbox-grid" id="amenities-container">
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenity" value="Parking"> Parking
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenity" value="Gym"> Gym
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenity" value="Swimming Pool"> Swimming Pool
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenity" value="Lift"> Lift
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenity" value="Security"> Security
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenity" value="Power Backup"> Power Backup
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenity" value="Garden"> Garden
+            </label>
+          </div>
+        </div>
+
+        <!-- Filter Action Buttons -->
+        <div class="filter-actions">
+          <button type="button" id="btn-reset-filters" class="btn btn-secondary">Reset</button>
+          <button type="submit" id="btn-apply-filters" class="btn btn-primary">Apply Filters</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Day 2: Leaflet Map View -->
+    <section class="map-section">
+      <div class="map-section-header">
+        <h2>🗺️ Interactive Property Map</h2>
+        <small style="color: var(--text-muted);">Click on any pin to view property preview</small>
+      </div>
+      <!-- Leaflet map container (Must have defined height in CSS) -->
+      <div id="map" role="region" aria-label="Interactive Leaflet Map"></div>
+    </section>
+
+    <!-- Day 1 & 2: Dynamic Property Listings Section -->
+    <section class="listings-section">
+      <div class="section-title-bar">
+        <h2>Available Properties</h2>
+        <span class="results-count" id="results-count">Loading properties...</span>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-spinner" class="loading-state">
+        <div class="spinner"></div>
+        <p>Fetching properties from HomeFinder server...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state" style="display: none;">
+        <div class="empty-state-icon">🏘️</div>
+        <h3>No properties found</h3>
+        <p>We couldn't find any rentals matching your filter criteria. Try adjusting or clearing your filters.</p>
+        <button type="button" class="btn btn-secondary" id="btn-empty-reset">Clear All Filters</button>
+      </div>
+
+      <!-- Day 1 & 2: Responsive Property Cards Grid -->
+      <div id="property-grid" class="property-grid" style="display: none;"></div>
+    </section>
+
+  </main>
+
+  <!-- Day 1: Semantic Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p><strong>HomeFinder</strong> &mdash; Mini Property Marketplace &bull; College Skill Lab Project</p>
+      <p>Built with plain HTML5, CSS3, Vanilla JavaScript, Node.js, Express &amp; MongoDB</p>
+    </div>
+  </footer>
+
+  <!-- Day 2: Leaflet JS via CDN -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Day 2: Client-side App Script -->
+  <script src="js/app.js"></script>
+</body>
+</html>

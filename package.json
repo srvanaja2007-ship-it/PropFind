@@ -1,0 +1,26 @@
+{
+  "name": "homefinder",
+  "version": "1.0.0",
+  "description": "Mini Property Marketplace - College Skill Lab Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "seed": "node seed.js"
+  },
+  "keywords": [
+    "property-marketplace",
+    "leaflet",
+    "express",
+    "mongodb",
+    "vanilla-js"
+  ],
+  "author": "HomeFinder Team",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.2"
+  }
+}

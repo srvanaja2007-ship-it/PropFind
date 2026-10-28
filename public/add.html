@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- Day 1: HTML5 Document Structure for Form Management -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Add or edit rental property listings on HomeFinder.">
+  <title>List Your Property | HomeFinder</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Day 1: Core Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Day 1: Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-brand" id="brand-logo">
+        <span class="logo-icon">🏠</span>
+        <span>HomeFinder</span>
+      </a>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" id="nav-browse">&larr; Back to Listings</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Day 1: Main Container -->
+  <main class="main-container">
+    <div class="form-card">
+      <div class="form-card-header">
+        <h1 id="form-title">List a New Property</h1>
+        <p id="form-subtitle">Fill in the property details below to publish your rental listing on HomeFinder.</p>
+      </div>
+
+      <!-- Alert Box for API Errors / Validation feedback -->
+      <div id="alert-box" class="alert" style="display: none;" role="alert"></div>
+
+      <!-- Day 1: Accessible HTML Form with Semantic Inputs -->
+      <form id="property-form" novalidate>
+        <!-- Property Title -->
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="title">Listing Title *</label>
+          <input
+            type="text"
+            id="title"
+            name="title"
+            class="form-control"
+            placeholder="e.g. Spacious 2 BHK Flat with Balcony in Koramangala"
+            required
+          >
+          <span class="helper-text">A descriptive title highlighting key features</span>
+        </div>
+
+        <!-- Price and BHK Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="price">Monthly Rent (₹) *</label>
+            <input
+              type="number"
+              id="price"
+              name="price"
+              class="form-control"
+              placeholder="e.g. 28000"
+              min="1000"
+              required
+            >
+          </div>
+          <div class="form-group">
+            <label for="bhk">Configuration (BHK) *</label>
+            <select id="bhk" name="bhk" class="form-control" required>
+              <option value="">Select BHK</option>
+              <option value="1">1 BHK</option>
+              <option value="2">2 BHK</option>
+              <option value="3">3 BHK</option>
+              <option value="4">4 BHK</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Location -->
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="location">Location / Area *</label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            class="form-control"
+            placeholder="e.g. 4th Block, Koramangala, Bengaluru"
+            required
+          >
+        </div>
+
+        <!-- Coordinates (Lat & Lng for Leaflet Map) -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="lat">Latitude *</label>
+            <input
+              type="number"
+              id="lat"
+              name="lat"
+              step="any"
+              class="form-control"
+              placeholder="e.g. 12.9352"
+              required
+            >
+            <span class="helper-text">Bengaluru latitude ~12.97</span>
+          </div>
+          <div class="form-group">
+            <label for="lng">Longitude *</label>
+            <input
+              type="number"
+              id="lng"
+              name="lng"
+              step="any"
+              class="form-control"
+              placeholder="e.g. 77.6245"
+              required
+            >
+            <span class="helper-text">Bengaluru longitude ~77.59</span>
+          </div>
+        </div>
+
+        <!-- Image URL -->
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label for="imageUrl">Property Image URL *</label>
+          <input
+            type="url"
+            id="imageUrl"
+            name="imageUrl"
+            class="form-control"
+            placeholder="https://images.unsplash.com/photo-..."
+            required
+          >
+          <span class="helper-text">Direct image URL (e.g., Unsplash photo)</span>
+        </div>
+
+        <!-- Amenities Checkboxes -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+          <label>Available Amenities</label>
+          <div class="checkbox-grid" style="margin-top: 0.35rem;">
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenities" value="Parking"> Parking
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenities" value="Gym"> Gym
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenities" value="Swimming Pool"> Swimming Pool
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenities" value="Lift"> Lift
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenities" value="Security"> Security
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenities" value="Power Backup"> Power Backup
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="amenities" value="Garden"> Garden
+            </label>
+          </div>
+        </div>
+
+        <!-- Owner Details Row -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="ownerName">Owner / Broker Name *</label>
+            <input
+              type="text"
+              id="ownerName"
+              name="ownerName"
+              class="form-control"
+              placeholder="e.g. Rajesh Sharma"
+              required
+            >
+          </div>
+          <div class="form-group">
+            <label for="ownerPhone">Contact Phone Number *</label>
+            <input
+              type="tel"
+              id="ownerPhone"
+              name="ownerPhone"
+              class="form-control"
+              placeholder="e.g. +91 98765 43210"
+              required
+            >
+          </div>
+        </div>
+
+        <!-- Form Submission Actions -->
+        <div class="filter-actions" style="margin-top: 2rem;">
+          <a href="index.html" class="btn btn-secondary">Cancel</a>
+          <button type="submit" id="btn-submit" class="btn btn-primary">
+            Publish Property Listing
+          </button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <!-- Day 1: Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p><strong>HomeFinder</strong> &mdash; Mini Property Marketplace &bull; College Skill Lab Project</p>
+    </div>
+  </footer>
+
+  <!-- Day 2: Form Handling Script -->
+  <script src="js/add.js"></script>
+</body>
+</html>
